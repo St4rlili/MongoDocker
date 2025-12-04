@@ -1,4 +1,4 @@
-\documentclass[12pt, a4paper]{report}
+\documentclass[12pt, a4paper]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage[spanish, es-tabla]{babel}
@@ -62,12 +62,10 @@ Antes de empezar a meternos con Docker, lo primero que vamos a necesitar serán 
 
 \begin{itemize}
     \item Una base de datos
-    \item Una API
+    \item Una API que se conecte a dicha base de datos
 \end{itemize}
 
-Para la base de datos utilizamos Mongo de manera local, de preferencia, ya metida en Docker previamente.
-
-Por otra parte la API la haremos en Express con JavaScript.
+Para la base de datos utilizamos Mongo de manera local, de preferencia, ya metida en Docker previamente, por su parte la API la haremos en Express con JavaScript.
 
 Cabe destacar que la BBDD guardará empleados y grupos (que contienen empleados).
 
@@ -222,7 +220,7 @@ jobs:
 
 A partir de aquí indicaremos los pasos (steps) que queremos que siga, como en nuestro caso queremos subir la imagen a DockerHub haremos los pasos pertinentes.
 
-Empezaremos clonando nuestro código/proyecto a la máquina virtual, después configuraremos el Docker BuildX para que le permita construir imágenes. Después haremos login en nuestra cuenta (indicando los secrets) y ya le decimos que construya la imagen.
+Empezaremos clonando nuestro código/proyecto a la máquina virtual, después configuraremos el Docker BuildX para que le permita construir imágenes. Después haremos login en nuestra cuenta (indicando los secrets) y ya le indicamos que construya la imagen.
 
 \vspace{0.5cm}
 
@@ -257,7 +255,7 @@ Ahora podemos hacer que nos muestre si la imagen se ha construido simplemente a�
 
 \vspace{0.5cm}
 
-\begin{lstlisting}[caption=Trabajos definidos]
+\begin{lstlisting}[caption=Log para mostrar información]
       - name: Mostrar informacion de la imagen
         run: |
           echo "Imagen construida y subida exitosamente:"
@@ -270,6 +268,60 @@ Ahora podemos hacer que nos muestre si la imagen se ha construido simplemente a�
 \subsection{Enviar mensaje automático a Discord}
 En mi caso he decidido hacer que el mensaje se envie a Discord.
 
-Para hacer esto, primero iremos a un servidor nuestro y accederemos a su configuración
+Para hacer esto, primero iremos a un servidor nuestro y accederemos a su configuración, luego iremos a la sección de \textbf{Integraciones}.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../images/webhook.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Aquí crearemos un nuevo \textbf{Webhook}, donde le daremos un nombre y el canal donde queremos que se envíe el mensaje.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../images/webhook_creado.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Ahora copiaremos la URL del webhook que no da y la guardaremos en los secrets de GitHub con el nombre \textbf{DISCORD\_WEBHOOK}.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../images/secrets.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Por último, añadiremos un nuevo step al workflow anterior para que envíe el mensaje a Discord una vez la imagen se haya subido correctamente.
+
+\vspace{0.5cm}
+
+\begin{lstlisting}[caption=Step para enviar mensaje a Discord]
+      - name: Discord Webhook
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d "{\"content\": \"Imagen Docker actualizada y subida correctamente a Docker Hub!\"}" \
+          ${{ secrets.DISCORD_WEBHOOK }}
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+Ahora, cada vez que hagamos un push a main o master, se construirá y subirá la imagen automáticamente, y además se enviará un mensaje a nuestro canal de Discord indicándonos que se ha subido correctamente.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../images/mensaje.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Con esto finalizamos la documentación técnica sobre la dockerización de una API y el uso de workflows para automatizar la subida a DockerHub.
 
 \end{document}
