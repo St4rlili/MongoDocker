@@ -1,0 +1,275 @@
+\documentclass[12pt, a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\linespread{1.2}
+
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    urlcolor=cyan!70!black,
+}
+
+\renewcommand{\lstlistingname}{Código}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{black!5},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    framerule=0.5pt,
+    rulecolor=\color{black!20},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    captionpos=b,
+}
+\lstset{style=mystyle}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \includegraphics[width=0.8\textwidth]{../images/docker.png}
+    
+    \vspace{3cm}
+    
+    \Huge\bfseries
+    Documentación Técnica: \\
+    Dockerización de una API y uso de workflows
+    
+    \vfill
+    
+    \Large
+    \textbf{Autor:} Pedro José Meixús Belsol \\
+    \vspace{0.5cm}
+    \today
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Preparativos}
+Antes de empezar a meternos con Docker, lo primero que vamos a necesitar serán dos cosas:
+
+\begin{itemize}
+    \item Una base de datos
+    \item Una API
+\end{itemize}
+
+Para la base de datos utilizamos Mongo de manera local, de preferencia, ya metida en Docker previamente.
+
+Por otra parte la API la haremos en Express con JavaScript.
+
+Cabe destacar que la BBDD guardará empleados y grupos (que contienen empleados).
+
+\section{Dockerización de API}
+\subsection{Creación .dockerignore}
+Lo primero que haremos en nuestro proyecto, será añadir el archivo .dockerignore para evitar problemas de seguridad. En el, añadiremos los archivos que no queremos que se suban a DockerHub, y contendrá lo siguiente:
+
+\vspace{0.5cm}
+
+\begin{lstlisting}[caption=Contenido de .dockerignore]
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.DS_Store
+README.md
+*.md
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+\subsection{Creación dockerfile}
+Ahora crearemos nuestro dockerfile, que será el encargado de indicar las instrucciones a Docker a la hora de construir una imagen.
+
+En este archivo indicaremos:
+
+\begin{itemize}
+    \item La imagen base que usará, en nuestro caso Node.
+    \item Los archivos de dependencias que llevará del proyecto a la imagen mediante COPY.
+    \item Los comandos de instalación para las dependencias necesarias con RUN.
+    \item Llevaremos el resto de proyecto con otro COPY.
+    \item El puerto que se expondrá.
+    \item Los comandos que debe ejecutar cuando se arranque el contenedor.
+\end{itemize}
+
+\subsection{Construcción de la imagen}
+Con lo anterior ya preparado, podremos construir la imagen. Lo haremos con el siguiente comando:
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../images/docker_build.png}
+\end{center}
+
+\vspace{0.5cm}
+
+El comando monta la imagen con lo que hemos indicado en el dockerfile, además de tener el tag que indicamos en el comando (después del -t).
+
+Para probar si funciona correctamente podemos ejecutar el siguiente comando:
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../images/docker_run.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Una vez ejecutado, nos debería indicar por logs si ha arrancado todo correctamente, en cualquier caso siempre podemos comprobarlo accediendo a localhost en el puerto que le hayamos indicado (3000 en nuestro caso).
+
+\subsection{Creación docker-compose}
+Teniendo ya la API y la BBDD correctamente montadas, vamos a crear nuestro docker-compose que nos permitirá levantar ambos contenedores con un solo archivo y comando.
+
+Dentro de este indicadremos nuestros servicios que serán la API por un lado y la BBDD por otro. Ambos tendrán los siguientes parámetros:
+
+\begin{itemize}
+    \item Image: Donde indicaremos la imagen que utilizará, la BBDD, usará la propia de mongo, la API usará la que montamos anteriormente.
+    \item Ports: Aquí indicaremos los puertos que usará cada servicio.
+    \item Environment: Donde guardaremos las variables de entorno necesarias.
+\end{itemize}
+
+A mayores de esto, en la API indicaremos que arranque una vez la BBDD lo haga con \textbf{"depends\_on"}, y en la BBDD indicamos donde debe guardar los datos con \textbf{"volumes"}
+
+Con el docker-compose terminado podemos probarlo con el siguiente comando:
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../images/docker-compose.png}
+\end{center}
+
+\vspace{0.5cm}
+
+\subsection{Subir imagen a DockerHub}
+Ahora que lo tenemos todo montado correctamente, nos falta subir la imagen a DockerHub, esto podemos hacerlo con dos comandos, el primero para logearnos:
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../images/docker_login.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Y un segundo para pushear nuestra imagen a DockerHub:
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../images/docker_push.png}
+\end{center}
+
+\vspace{0.5cm}
+
+\section{Workflows}
+\subsection{Subida automática a DockerHub}
+Para esta última parte crearemos una la siguiente ruta dentro de nuestro proyecto \textbf{".github/workflows/docker-push.yml"}. El archivo docker-push será el encargado de automatizar la construcción y subida de imágenes a DockerHub. En el usaremos los \textbf{"secrets"} de GitHub para guardar información sensible.
+
+Dentro del mismo debemos indicar bastantes parámetros así que vamos a ir viéndolos poco a poco:
+
+Empezamos el archivo indicando el nombre de nuestro workflow, seguido del disparador, que es nuestro caso será un push a las rama main o master.
+
+\vspace{0.5cm}
+
+\begin{lstlisting}[caption=Nombre workflow y disparador]
+name: Build and Push Docker Image Pedro
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+Seguido de esto tenemos la declaracion de variables de entorno, donde guardaremos el nombre de nuestra imagen (incluyendo el secret de nuestro usuario) y el tag de la misma.
+
+\vspace{0.5cm}
+
+\begin{lstlisting}[caption=Variables de entorno]
+env:
+  DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/ejemplo-api
+  DOCKER_TAG: latest
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+A continuación declaramos los trabajos o \textbf{"jobs"} que ejecutará una vez el disparador se active, en nuestro caso solo ejecuta el trabajo \textbf{"build-and-push"} que se ejecutarán en un runner (máquina virtual) Ubuntu que nos proporciona GitHub.
+
+\vspace{0.5cm}
+
+\begin{lstlisting}[caption=Trabajos definidos]
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+A partir de aquí indicaremos los pasos (steps) que queremos que siga, como en nuestro caso queremos subir la imagen a DockerHub haremos los pasos pertinentes.
+
+Empezaremos clonando nuestro código/proyecto a la máquina virtual, después configuraremos el Docker BuildX para que le permita construir imágenes. Después haremos login en nuestra cuenta (indicando los secrets) y ya le decimos que construya la imagen.
+
+\vspace{0.5cm}
+
+\begin{lstlisting}[caption=Pasos definidos]
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login a Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Construir y subir imagen Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./dockerfile
+          push: true
+          tags: ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}
+          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE_NAME }}:buildcache
+          cache-to: type=inline
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+Ahora podemos hacer que nos muestre si la imagen se ha construido simplemente añadiendo un step para ello.
+
+\vspace{0.5cm}
+
+\begin{lstlisting}[caption=Trabajos definidos]
+      - name: Mostrar informacion de la imagen
+        run: |
+          echo "Imagen construida y subida exitosamente:"
+          echo "  - Imagen: ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}"
+          echo "  - Docker Hub: https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/ejemplo-api"
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+\subsection{Enviar mensaje automático a Discord}
+En mi caso he decidido hacer que el mensaje se envie a Discord.
+
+Para hacer esto, primero iremos a un servidor nuestro y accederemos a su configuración
+
+\end{document}
