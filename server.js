@@ -10,6 +10,10 @@ import groupRoutes from './routes/groups.js';
 const app = express();
 const PORT = 3000;
 
+app.get('/', (req, res) => {
+  res.send('contenido')
+})
+
 app.use(bodyParser.json());
 
 app.use('/users', userRoutes);
