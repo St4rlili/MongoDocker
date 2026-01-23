@@ -1,0 +1,265 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\linespread{1.2}
+
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    urlcolor=cyan!70!black,
+}
+
+\renewcommand{\lstlistingname}{Código}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{black!5},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    framerule=0.5pt,
+    rulecolor=\color{black!20},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    captionpos=b,
+}
+\lstset{style=mystyle}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/coolify.png}
+    
+    \vspace{3cm}
+    
+    \Huge\bfseries
+    Documentación Técnica: \\
+    Instalación y uso de Coolify con Ngrok
+    
+    \vfill
+    
+    \Large
+    \textbf{Autor:} Pedro José Meixús Belsol \\
+    \vspace{0.5cm}
+    \today
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Instalación y preparación}
+
+Para empezar, instalaremos una máquina virtual Linux (Ubuntu).
+
+Ya con ella instalada, vamos a descargar Coolify, vamos a su página y utilizamos el comando que nos indican para la instalación:
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{images/coolify_comando.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Se instalará y una vez termine accederemos a la IP que nos indica y crearemos una cuenta de Coolify.
+
+Hecho esto vamos a instalar Ngrok, igual que con Coolify, accederemos a su página y usaremos el comando que nos indican:
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{images/instalacion_ngrok.png}
+\end{center}
+
+\vspace{0.5cm}
+
+\newpage
+\section{Configuración Coolify}
+
+Una vez hecho esto, accederemos al 'localhost:8000' desde nuestro host, donde deberá aparecer la interfaz de Coolify, en esta podremos logearnos.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{images/coolify_inicio.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Una vez logeados crearemos nuestro propio proyecto. En el crearemos una nueva base de datos (en nuestro caso será Mongo):
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{images/creacion_bbdd.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Podremos acceder a su configuración y veremos que nos proporciona una URI. Le daremos a 'Deploy' y si arranca correctamente mostrará 'Running'
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{images/configuracion_bbdd.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Ahora con la BBDD preparada, creamos la API, que obtiene desde nuestro repositorio de github:
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{images/creacion_api.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Para una futura comprobación le añadire algo para mostrar, por ejemplo la palabra 'contenido'
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.4\textwidth]{images/contenido_api.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Una vez indicado el repositorio y aceptado, se desplegará y cuando termine nos dejará en una ventana como esta, donde debemos indicar el dockerfile, puerto, etc.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{images/api_creada.png}
+\end{center}
+
+\vspace{0.5cm}
+
+\newpage
+\section{Pruebas de conexión}
+
+Con la IP que nos genera en el apartado 'Domains' podemos cambiar la dirección IP que sale ahí por la de nuestra máquina y redesplegar la API, así podremos acceder desde nuestra máquina virtual.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{images/prueba_conexion_vm.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Ahora que tenemos la conexión funcional, vamos a buscar la IP del contenedor Docker donde esté nuestra API, para eso usaremos el comando 'inspect' junto con los parámetros necesarios y el ID del contenedor.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{images/contenedor_api.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Si introducimos esa IP que nos ha dado junto con el puerto usado (3000) nos deberá llevar al mismo lugar.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{images/prueba_conexion_docker.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Si lo anterior ha funcionado, entonces podemos utilizar ngrok para exponer nuestra API, con el siguiente comando:
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{images/ngrok_comando.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Nos llevará a esta ventana (la cual dejaremos abierta), que es el túnel que nos da la URL (la del apartado 'Forwarding') con la que podremos acceder desde nuestra máquina al contenido de la API.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{images/ngrok_tunel.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Accediendo a esa URL nos deberá aparecer el contenido correspondiente, al igual que en las anteriores pruebas.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{images/prueba_conexion_host.png}
+\end{center}
+
+\vspace{0.5cm}
+
+\newpage
+\section{Webhook}
+
+El último paso será configurar el webhook. Primero tendremos que ir a la configuración de nuestra API y activar el 'Auto Deploy'.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{images/preparacion_webhook.png}
+\end{center}
+
+\vspace{0.5cm}
+
+En el apartado de Webhook de la configuración de la API, añadiremos un 'secret' que será la 'contraseña' de nuestro webhook.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{images/configuracion_webhook.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Ahora iremos al repositorio de github, al apartado 'settings' y en 'Webhooks' añadiremos uno nuevo.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{images/creacion_webhook.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Aquí solo deberemos introducir el 'Payload URL' que será la URL que nos da ngrok junto con la ruta de los webhooks de coolify, además de el secret que indicamos en coolify. El resto quedará predeterminado.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{images/creacion_webhook2.png}
+\end{center}
+
+\vspace{0.5cm}
+
+Con eso hecho el webhook estaría hecho y debería funcionar correctamente. En mi caso tuve un error y coolify no recibía el mensaje del webhook, estuve probando por si podia ser el puerto, la ruta de ngrok o algo similar, pero no hago que funcione.
+
+\vspace{0.5cm}
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{images/webhook_error.png}
+\end{center}
+
+\vspace{0.5cm}
+
+\end{document}
