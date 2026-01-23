@@ -11,7 +11,7 @@ const app = express();
 const PORT = 3000;
 
 app.get('/', (req, res) => {
-  res.send('contenido prueba webhook')
+  res.send('prueba webhook')
 })
 
 app.use(bodyParser.json());
